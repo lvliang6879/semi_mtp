@@ -1,0 +1,14 @@
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_2_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_2_13_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_2_14_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_2_14_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_3_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_3_13_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_3_14_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_3_14_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_4_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_4_13_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_4_14_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_4_14_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_4_15_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_4_15_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_5_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_5_13_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_5_14_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_5_14_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_5_15_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_5_15_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_6_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_6_13_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_6_14_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_6_14_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_6_15_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_6_15_label.tif
+Potsdam_ori/potsdam/2_Ortho_RGB/val/top_potsdam_7_13_RGB.tif Potsdam_ori/potsdam/5_Labels_class/val/top_potsdam_7_13_label.tif

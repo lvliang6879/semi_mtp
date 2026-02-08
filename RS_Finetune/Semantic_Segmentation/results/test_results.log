@@ -1,0 +1,164 @@
+vit_b_moe:
+    Vaihingen:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 90.65
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 95.01
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 81.03
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 86.69
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 89.78
+        ***** Evaluation original ***** >>>> MeanF1: 88.63
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 82.90
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 90.50
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 68.11
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 76.51
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 81.46
+        ***** Evaluation original ***** >>>> MeanIoU: 79.90
+        
+    Potsdam:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 93.25
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 96.96
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 87.30
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 86.97
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 97.66
+        ***** Evaluation original ***** >>>> MeanF1: 92.43
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 87.35
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 94.10
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 77.47
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 76.95
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 95.43
+        ***** Evaluation original ***** >>>> MeanIoU: 86.26
+
+    OpenEarthMap:
+        ***** Evaluation ***** >>>> Class [0 other ] F1: 97.90
+        ***** Evaluation ***** >>>> Class [1 Bareland] F1: 62.55
+        ***** Evaluation ***** >>>> Class [2 Grass ] F1: 71.77
+        ***** Evaluation ***** >>>> Class [3 Pavement] F1: 71.21
+        ***** Evaluation ***** >>>> Class [4 Road] F1: 75.35
+        ***** Evaluation ***** >>>> Class [5 Tree] F1: 80.69
+        ***** Evaluation ***** >>>> Class [6 water] F1: 87.98
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] F1: 88.07
+        ***** Evaluation ***** >>>> Class [8 Building] F1: 87.27
+        ***** Evaluation resize ***** >>>> MeanF1: 80.31
+
+        ***** Evaluation ***** >>>> Class [0 other ] IoU: 95.88
+        ***** Evaluation ***** >>>> Class [1 Bareland] IoU: 45.50
+        ***** Evaluation ***** >>>> Class [2 Grass ] IoU: 55.96
+        ***** Evaluation ***** >>>> Class [3 Pavement] IoU: 55.29
+        ***** Evaluation ***** >>>> Class [4 Road] IoU: 60.44
+        ***** Evaluation ***** >>>> Class [5 Tree] IoU: 67.63
+        ***** Evaluation ***** >>>> Class [6 water] IoU: 78.54
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] IoU: 78.68
+        ***** Evaluation ***** >>>> Class [8 Building] IoU: 77.42
+        ***** Evaluation resize ***** >>>> MeanIoU: 68.37
+
+
+vit_l_moe:
+    Vaihingen:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 91.26
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 95.47
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 81.93
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 86.93
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 90.53
+        ***** Evaluation original ***** >>>> MeanF1: 89.22
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 83.93
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 91.34
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 69.39
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 76.87
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 82.70
+        ***** Evaluation original ***** >>>> MeanIoU: 80.85
+
+    Potsdam:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 93.66
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 97.40
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 87.73
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 87.41
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 97.71
+        ***** Evaluation original ***** >>>> MeanF1: 92.78
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 88.08
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 94.94
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 78.15
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 77.64
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 95.52
+        ***** Evaluation original ***** >>>> MeanIoU: 86.86
+
+    OpenEarthMap:
+        ***** Evaluation ***** >>>> Class [0 other ] F1: 97.76
+        ***** Evaluation ***** >>>> Class [1 Bareland] F1: 64.93
+        ***** Evaluation ***** >>>> Class [2 Grass ] F1: 72.32
+        ***** Evaluation ***** >>>> Class [3 Pavement] F1: 72.96
+        ***** Evaluation ***** >>>> Class [4 Road] F1: 77.02
+        ***** Evaluation ***** >>>> Class [5 Tree] F1: 82.02
+        ***** Evaluation ***** >>>> Class [6 water] F1: 89.06
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] F1: 87.87
+        ***** Evaluation ***** >>>> Class [8 Building] F1: 87.89
+        ***** Evaluation resize ***** >>>> MeanF1: 81.31
+
+        ***** Evaluation ***** >>>> Class [0 other ] IoU: 95.61
+        ***** Evaluation ***** >>>> Class [1 Bareland] IoU: 48.07
+        ***** Evaluation ***** >>>> Class [2 Grass ] IoU: 56.64
+        ***** Evaluation ***** >>>> Class [3 Pavement] IoU: 57.43
+        ***** Evaluation ***** >>>> Class [4 Road] IoU: 62.63
+        ***** Evaluation ***** >>>> Class [5 Tree] IoU: 69.52
+        ***** Evaluation ***** >>>> Class [6 water] IoU: 80.27
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] IoU: 78.36
+        ***** Evaluation ***** >>>> Class [8 Building] IoU: 78.40
+        ***** Evaluation resize ***** >>>> MeanIoU: 69.66
+
+    
+    
+   vit_h_moe:
+    Vaihingen:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 91.38
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 95.52
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 81.89
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 86.82
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 90.75
+        ***** Evaluation original ***** >>>> MeanF1: 89.27
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 84.13
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 91.42
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 69.33
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 76.71
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 83.07
+        ***** Evaluation original ***** >>>> MeanIoU: 80.93
+
+    Potsdam:
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] F1: 93.87
+        ***** Evaluation ***** >>>> Class [1 Building] F1: 97.32
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] F1: 88.23
+        ***** Evaluation ***** >>>> Class [3 Tree] F1: 87.67
+        ***** Evaluation ***** >>>> Class [4 Car] F1: 97.79
+        ***** Evaluation original ***** >>>> MeanF1: 92.97
+
+        ***** Evaluation ***** >>>> Class [0 Impervious_Surface] IoU: 88.45
+        ***** Evaluation ***** >>>> Class [1 Building] IoU: 94.78
+        ***** Evaluation ***** >>>> Class [2 Low_Vegetation] IoU: 78.94
+        ***** Evaluation ***** >>>> Class [3 Tree] IoU: 78.04
+        ***** Evaluation ***** >>>> Class [4 Car] IoU: 95.67
+        ***** Evaluation original ***** >>>> MeanIoU: 87.18
+            
+    OpenEarthMap:
+        ***** Evaluation ***** >>>> Class [0 other ] F1: 96.77
+        ***** Evaluation ***** >>>> Class [1 Bareland] F1: 65.00
+        ***** Evaluation ***** >>>> Class [2 Grass ] F1: 72.73
+        ***** Evaluation ***** >>>> Class [3 Pavement] F1: 73.92
+        ***** Evaluation ***** >>>> Class [4 Road] F1: 78.56
+        ***** Evaluation ***** >>>> Class [5 Tree] F1: 82.16
+        ***** Evaluation ***** >>>> Class [6 water] F1: 88.52
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] F1: 88.49
+        ***** Evaluation ***** >>>> Class [8 Building] F1: 88.51
+        ***** Evaluation resize ***** >>>> MeanF1: 81.63
+
+        ***** Evaluation ***** >>>> Class [0 other ] IoU: 93.75
+        ***** Evaluation ***** >>>> Class [1 Bareland] IoU: 48.15
+        ***** Evaluation ***** >>>> Class [2 Grass ] IoU: 57.14
+        ***** Evaluation ***** >>>> Class [3 Pavement] IoU: 58.63
+        ***** Evaluation ***** >>>> Class [4 Road] IoU: 64.68
+        ***** Evaluation ***** >>>> Class [5 Tree] IoU: 69.72
+        ***** Evaluation ***** >>>> Class [6 water] IoU: 79.41
+        ***** Evaluation ***** >>>> Class [7 Agriculture land] IoU: 79.35
+        ***** Evaluation ***** >>>> Class [8 Building] IoU: 79.38
+        ***** Evaluation resize ***** >>>> MeanIoU: 70.02

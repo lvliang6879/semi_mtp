@@ -1,0 +1,5 @@
+# ninja log v5
+0	4742	1717169227978648643	/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/build/temp.linux-x86_64-cpython-38/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/src/cpu/dcnv3_cpu.o	37c862c8121715ef
+1	24937	1717169248158858846	/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/build/temp.linux-x86_64-cpython-38/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/src/vision.o	6bf11a6d2b35c3bf
+1	26429	1717169249650874380	/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/build/temp.linux-x86_64-cpython-38/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/src/vision_hip.o	e21c3210642918c1
+0	50122	1717169273331120763	/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/build/temp.linux-x86_64-cpython-38/data1/users/zhengzhiyu/mtp_workplace/code/backbone/ops_dcnv3/src/cuda/dcnv3_cuda.o	1e1ebc30a63ef637

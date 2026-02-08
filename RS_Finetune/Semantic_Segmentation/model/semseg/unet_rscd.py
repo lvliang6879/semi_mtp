@@ -1,0 +1,429 @@
+import torch
+import torch.nn as nn
+from model.backbone.vit_win_rvsa_v3_wsz7_mtp import vit_b_rvsa, vit_l_rvsa
+# from model.backbone.intern_image import InternImage
+from model.backbone.vit import ViT_B, ViT_L, ViT_H
+from model.backbone.vit_moe import ViT_B_MOE, ViT_L_MOE, ViT_H_MOE
+# from model.backbone.vitaev2 import vitae_v2_s
+from model.semseg.feature_fusion import FeatureFusionNeck
+from model.semseg.unet_head import UNetHead
+# from model.backbone.our_resnet import res50
+from model.backbone.swin_transformer import swin_t
+from model.backbone.swin import swin
+from model.backbone.biformer.R3BiFormer import biformer_tiny, biformer_small
+# from model.backbone.swin_transformer2 import SwinTransformer
+import torch.nn.functional as F
+
+class AverageMeter(object):
+    """
+    Computes and stores the average and current value
+    Copied from: https://github.com/pytorch/examples/blob/master/imagenet/main.py
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def initialize_head(module):
+    for m in module.modules():
+        if isinstance(m, (nn.Linear, nn.Conv2d)):
+            nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+
+def accuracy_fn(y_true, y_pred):
+    """Calculates accuracy between truth labels and predictions.
+
+    Args:
+        y_true (torch.Tensor): Truth labels for predictions.
+        y_pred (torch.Tensor): Predictions to be compared to predictions.
+
+    Returns:
+        [torch.float]: Accuracy value between y_true and y_pred, e.g. 78.45
+    """
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct / len(y_pred)) * 100
+    return acc
+
+def get_backbone(args):
+    
+    if args.backbone == 'swin_t':
+        # encoder = SwinTransformer(depths=[2, 2, 6, 2],
+        #             num_heads=[3, 6, 12, 24],
+        #             window_size=7,
+        #             ape=False,
+        #             drop_path_rate=0.3,
+        #             patch_norm=True
+        #             )
+        
+        # encoder = swin_t()
+        # encoder = swin_t()
+        encoder = swin(embed_dim=96, 
+                    depths=[2, 2, 6, 2],
+                    num_heads=[3, 6, 12, 24],
+                    window_size=7,
+                    ape=False,
+                    drop_path_rate=0.3,
+                    patch_norm=True
+                    )
+        print('################# Using Swin-T as backbone! ###################')
+        if args.init_backbone == 'rsp':
+            encoder.init_weights('./pretrained/rsp-swin-t-ckpt.pth')
+        if args.init_backbone == 'imp':
+            encoder.init_weights('./pretrained/swin_tiny_patch4_window7_224.pth')
+            print('################# Initing Swin-T pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure Swin-T Pretraining! ###################')
+        else:
+            raise NotImplementedError
+    
+    if args.backbone == 'swin_b':
+        encoder = swin_b()
+        print('################# Using Swin-T as backbone! ###################')
+        if args.init_backbone == 'imp':
+            encoder.init_weights('./pretrained/swin_base_patch4_window7_224_22k_20220317-4f79f7c0.pth')
+            print('################# Initing Swin-T pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure Swin-T Pretraining! ###################')
+        else:
+            raise NotImplementedError
+        
+    if args.backbone == 'swin_l':
+        encoder = swin(embed_dim=192, 
+                        depths=[2, 2, 18, 2],
+                        num_heads=[6, 12, 24, 48],
+                        window_size=7,
+                        ape=False,
+                        drop_path_rate=0.3,
+                        patch_norm=True
+                        )
+        print('################# Using Swin-L as backbone! ###################')
+        if args.init_backbone == 'imp':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/swin_large_patch4_window7_224_22k.pth')
+            print('################# Initing Swin-T pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure Swin-T Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    if args.backbone == 'vit_b_rvsa':
+        encoder = vit_b_rvsa(args)
+        print('################# Using ViT-B + RVSA as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/vit-b-checkpoint-1599.pth')
+            print('################# Initing ViT-B + RVSA pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-B + RVSA SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+    elif args.backbone == 'vit_l_rvsa':
+        encoder = vit_l_rvsa(args)
+        print('################# Using ViT-L + RVSA as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('./pretrained/vit-l-mae-checkpoint-1599.pth')
+            print('################# Initing ViT-L + RVSA pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'mae_mtp':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/last_vit_l_rvsa_ss_is_rd_pretrn_model_encoder.pth')
+            print('################# Pure ViT-L + RVSA SEP Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-L + RVSA SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_h':
+        encoder = ViT_H(args)
+        print('################# Using ViT-H as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/semi_sep/vit_h/vit-h-mae-checkpoint-1599.pth')
+            print('################# Initing ViT-H pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-H SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_h_moe':
+        encoder = ViT_H_MOE(args)
+        print('################# Using ViT-H as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/semi_sep/vit_h/vit-h-mae-checkpoint-1599.pth')
+            print('################# Initing ViT-H pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-H SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_l':
+        encoder = ViT_L(args)
+        print('################# Using ViT-L as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/vit-l-mae-checkpoint-1599.pth')
+            print('################# Initing ViT-L pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'scale_mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/scalemae-vitlarge-800.pth')
+
+        elif args.init_backbone == 'satmae_pp':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/ViT-L_satmae_pp_pretrain_fmow_rgb.pth')
+            print('################# Initing ViT-L satmae_pp pretrained weights for Pretraining! ###################')
+        
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-L SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_l_moe':
+        encoder = ViT_L_MOE(args)
+        print('################# Using ViT-L-MOE as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/vit-l-mae-checkpoint-1599.pth')
+            print('################# Initing ViT-L-MOE pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'scale_mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/scalemae-vitlarge-800.pth')
+
+        elif args.init_backbone == 'satmae_pp':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/ViT-L_satmae_pp_pretrain_fmow_rgb.pth')
+            print('################# Initing ViT-L-MOE satmae_pp pretrained weights for Pretraining! ###################')
+        
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-L-MOE SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_b':
+        encoder = ViT_B(args)
+        print('################# Using ViT-B as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/vit-b-checkpoint-1599.pth')
+            print('################# Initing ViT-B  pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'my_mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/Remote-Sensing-RVSA-main/Remote-Sensing-RVSA-main/mae-main/output/millionAID_224/1600_0.75_0.00015_0.05_1792/checkpoint-0.pth')
+            print('################# Initing ViT-B My MAE pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'mae_imagenet':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep2/pretrained/mae_pretrain_vit_base.pth')
+            print('################# Initing ViT-B MAE pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 's5':
+            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/best_vit_b_ins.pth')
+            print('################# Initing ViT-B S5 pretrained weights for Pretraining! ###################')
+
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-B SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'vit_b_moe':
+        encoder = ViT_B_MOE(args)
+        print('################# Using ViT-B as backbone! ###################')
+        if args.init_backbone == 'mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/vit-b-checkpoint-1599.pth')
+            print('################# Initing ViT-B  pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'my_mae':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/Remote-Sensing-RVSA-main/Remote-Sensing-RVSA-main/mae-main/output/millionAID_224/1600_0.75_0.00015_0.05_1792/checkpoint-0.pth')
+            print('################# Initing ViT-B My MAE pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'mae_imagenet':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep2/pretrained/mae_pretrain_vit_base.pth')
+            print('################# Initing ViT-B MAE pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 's5':
+            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/best_vit_b_ins.pth')
+            print('################# Initing ViT-B S5 pretrained weights for Pretraining! ###################')
+
+        elif args.init_backbone == 'none':
+            print('################# Pure ViT-B SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+    elif args.backbone == 'internimage_xl':
+        encoder = InternImage(core_op='DCNv3',
+                        channels=192,
+                        depths=[5, 5, 24, 5],
+                        groups=[12, 24, 48, 96],
+                        mlp_ratio=4.,
+                        drop_path_rate=0.2,
+                        norm_layer='LN',
+                        layer_scale=1e-5,
+                        offset_scale=2.0,
+                        post_norm=True,
+                        with_cp=True,
+                        out_indices=(0, 1, 2, 3)
+                        )
+        print('################# Using InternImage-XL as backbone! ###################')
+        if args.init_backbone == 'imp':
+            encoder.init_weights('./pretrained/internimage_xl_22kto1k_384.pth')
+            print('################# Initing InterImage-T pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure InterImage-T SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+        
+    elif args.backbone == 'vitaev2_s':
+        print('################# Using ViTAEv2-S as backbone! ###################')
+        encoder = vitae_v2_s(args)
+        if args.init_backbone == 'rsp':
+            encoder.init_weights("./pretrained/rsp-vitaev2-s-ckpt.pth")
+            print('################# Using RSP as pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure ViTAEV2-S Pretraining! ###################')
+        else:
+            raise NotImplementedError
+        
+    elif args.backbone == 'resnet50':
+        print('################# Using ResNet-50 as backbone! ###################')
+        encoder = res50()
+        if args.init_backbone == 'rsp':
+            encoder.init_weights("./pretrained/rsp-resnet-50-ckpt.pth")
+            print('################# Using RSP as pretraining! ###################')
+        elif args.init_backbone == 'imp':
+            encoder.init_weights("./pretrained/resnet50-0676ba61.pth")
+        elif args.init_backbone == 'none':
+            print('################# Pure  Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+    elif args.backbone == 'R3B_S':
+        encoder = biformer_small(args)
+        print('################# Using R3BiFormer-S as backbone! ###################')
+        if args.init_backbone == 'imp':
+            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/biformer_small_best.pth')
+            print('################# Initing R3BiFormer-S  pretrained weights for Pretraining! ###################')
+        elif args.init_backbone == 'none':
+            print('################# Pure R3BiFormer-S SEP Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    return encoder
+
+
+
+def get_semsegdecoder(in_channels):
+    semsegdecoder = UNetHead(**dict(
+        # type='UNetHead',
+        num_classes=2,
+        ignore_index=255,
+        in_channels=in_channels,
+        in_index=[0, 1, 2, 3],
+        channels=64,
+        dropout_ratio=0.1,
+        encoder_channels=in_channels,
+        decoder_channels=[512, 256, 128, 64],
+        n_blocks=4,
+        use_batchnorm=True,
+        center=False,
+        attention_type=None,
+        norm_cfg=dict(type='SyncBN', requires_grad=True),
+        align_corners=False,
+        loss_decode=dict(
+            type='mmseg.CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+    ))
+    return semsegdecoder
+
+
+
+def get_neck(in_channels):
+    neck = FeatureFusionNeck(
+        policy='abs_diff',
+        in_channels=in_channels,
+        out_indices=(0, 1, 2, 3)
+    )
+    return neck
+
+
+class UNet(torch.nn.Module):
+    def __init__(self, args, cfg):
+        super(UNet, self).__init__()
+
+        self.args = args
+        self.encoder = get_backbone(args)
+
+
+        self.levirneck = get_neck(in_channels=getattr(self.encoder, 'out_channels', None))
+        self.whuneck = get_neck(in_channels=getattr(self.encoder, 'out_channels', None))
+        self.levirdecoder = get_semsegdecoder(in_channels=getattr(self.encoder, 'out_channels', None))
+        self.whudecoder = get_semsegdecoder(in_channels=getattr(self.encoder, 'out_channels', None))
+
+
+    def forward(self, x1, x2, dataset=None):
+        h, w = x1.shape[-2:]
+        if self.args.backbone == 'vit_b_moe' or self.args.backbone == 'vit_l_moe' or self.args.backbone == 'vit_h_moe':
+            e1 = self.encoder(x1, dataset)
+            e2 = self.encoder(x2, dataset)
+        else:
+            e1 = self.encoder(x1)
+            e2 = self.encoder(x2)
+
+        if dataset == 'levir':
+            neck = self.levirneck
+            decoder = self.levirdecoder
+        elif dataset == 'oscd':
+            neck = self.whuneck
+            decoder = self.whudecoder
+        s =  neck(e1, e2)
+        out = decoder(s)
+        return out
+
+
+
+class Residual(nn.Module):
+    def __init__(self, fn):
+        super().__init__()
+        self.fn = fn
+    def forward(self, x):
+        x1=self.fn(x)
+        return x1+x
+
+
+if __name__ =="__main__":
+    # MutliTaskPretrnFramework()
+    model = UperNet(args).cuda()
+    class Args:
+        def __init__(self):
+            self.backbone = 'swin_t'  # Backbone selection
+            self.init_backbone = 'none'  # Pretraining method for backbone
+            self.terr_nclass = 6  # Number of terrain classes for segmentation
+            self.ins_nclass = 5  # Number of instance classes for segmentation
+
+    # 实例化配置参数
+    args = Args()
+
+    # 创建 UperNet 模型实例
+    model = UperNet(args)
+
+    # 将模型设置为评估模式
+    model.eval()
+
+    # 生成一个随机输入 (假设输入尺寸为 [batch_size, channels, height, width])
+    input_tensor = torch.randn(1, 3, 224, 224)  # 创建一个随机输入张量
+
+    # 将输入传递给模型并获得输出
+    with torch.no_grad():
+        output = model(input_tensor)
+
+    # 打印输出的形状
+    print(output.shape)
+
+
+
+
+
+
+
+
+
