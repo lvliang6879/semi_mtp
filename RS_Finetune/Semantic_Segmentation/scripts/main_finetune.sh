@@ -15,8 +15,8 @@ dataset='AIRPolarSARSeg'              # ✅ 当前使用：极化 SAR 分割数�
 
 # 训练方法（主入口脚本）
 method='main_finetune_sar'            # ✅ 微调 SAR 模型
-# method='main_finetune_my_peft'      # 自定义 PEFT 微调
-# method='main_finetune_cpu'  
+# method='main_finetune_my_peft'      # 自定义 PEFT 微调, 加载预训练权重时需要修改 modality 超参，确定进行opt或sar的微调
+# method='main_finetune_opt'          # ✅ 微调 OPT 模型
 
 # 实验名称（用于区分不同预训练/策略）
 exp='best_dinov3_vit_b_SemiM3P_48k'   # 基于 DINOv3 ViT-B + SemiM3P 伪标签的 48k 样本实验

@@ -36,8 +36,7 @@ parser.add_argument('--port', default=None, type=int)
 parser.add_argument('--image_size', type=int, default=512)
 parser.add_argument('--interval', default=1, type=int, help='valid interval')
 parser.add_argument('--load', type=str, default='none', choices=['backbone','network', 'none'], help='loaded model part')
-# parser.add_argument('--resume', type=str, default='/data1/users/zhengzhiyu/ssl_workplace/S5_fulll/S4_Pretrain/exp/semi_mtp/dinov3_vit_b/labeled_mota_ms_merge_IRSAMap_lr5e_5/best_dinov3_vit_b_multi_48k.pth', help='resume name')
-parser.add_argument('--resume', type=str, default='/data1/users/zhengzhiyu/ssl_workplace/S5_fulll/S4_Pretrain/exp/semi_mtp/dinov3_vit_b_mae/labeled_mota_ms_merge_IRSAMap_lr5e_5_mask_0.5/best_dinov3_vit_b_mask_0.5_multi_40k.pth', help='resume name')
+parser.add_argument('--resume', type=str, default='/data1/users/lvliang/project_123/S5_finetune/pretrained/dinov3_vit_b_semim3p_iter_20000.pth', help='resume name')
 
 
 
@@ -171,7 +170,6 @@ def main():
     args = parser.parse_args()
 
     cfg = yaml.load(open(args.config, "r"), Loader=yaml.Loader)
-    cfg['peft'] = 'lora'
     cfg['target_modules'] = ['mlp']
 
     logger = init_log('global', logging.INFO)
@@ -191,6 +189,7 @@ def main():
     cudnn.benchmark = True
 
     model = UperNet(args, cfg)
+    
     if args.load == 'network':
         if os.path.isfile(args.resume):
             if rank == 0:
@@ -198,41 +197,71 @@ def main():
             checkpoint = torch.load(args.resume, map_location='cpu')
             if rank == 0:
                 logger.info("=> loading ft model...")
-            # ckpt_dict = checkpoint['state_dict']
-            ckpt_dict = checkpoint['model']
+            ckpt_dict = checkpoint['teacher']
 
             if list(ckpt_dict.keys())[0].startswith('module.'):
                 ckpt_dict = {k[7:]: v for k, v in ckpt_dict.items()}
-            model_dict = model.state_dict()
-        
-            # ====== DEBUG: 打印两边的 keys 和 shapes ======
-            # if rank == 0:
-            #     print("\n=== Checkpoint keys (loaded) ===")
-            #     for k, v in ckpt_dict.items():
-            #         print(f"{k}: {v.shape}")
 
-            #     print("\n=== Current model keys (target) ===")
-            #     for k, v in model_dict.items():
-            #         print(f"{k}: {v.shape}")
-            # 过滤掉分割头的参数
+            model_dict = model.state_dict()
+
+            # === 处理 pos_embed（保持不变）===
+            if "backbone.pos_embed" in ckpt_dict and "backbone.pos_embed" in model_dict:
+                if ckpt_dict["backbone.pos_embed"].shape != model_dict["backbone.pos_embed"].shape:
+                    if rank == 0:
+                        logger.warning(f"Resizing pos_embed from {ckpt_dict['backbone.pos_embed'].shape} "
+                                    f"to {model_dict['backbone.pos_embed'].shape}")
+                    ckpt_dict["backbone.pos_embed"] = resize_pos_embed(
+                        ckpt_dict["backbone.pos_embed"],
+                        model_dict["backbone.pos_embed"]
+                    )
+
+            # === 确定当前微调的模态 ===
+            modality = getattr(args, 'modality', 'opt')
+            if rank == 0:
+                logger.info(f"Loading segmentation decoder/head for modality: {modality}")
+
+            # === 构建新的 filtered_ckpt_dict，支持模态映射 ===
             filtered_ckpt_dict = {}
+
             for k, v in ckpt_dict.items():
+                # 情况1：普通参数（如 encoder/backbone），直接匹配
                 if k in model_dict and model_dict[k].shape == v.shape:
                     filtered_ckpt_dict[k] = v
-                else:
-                    if rank == 0:
-                        logger.warning(f"Skipping parameter: {k} with shape {v.shape} (does not match)")
-            # 更新现有的 model state dict
+                    continue
+
+                # 情况2：来自 semsegdecoder.{modality} → 映射到 semsegdecoder
+                if k.startswith(f'semsegdecoder.{modality}.'):
+                    new_k = 'semsegdecoder.' + k[len(f'semsegdecoder.{modality}.'):]
+                    if new_k in model_dict and model_dict[new_k].shape == v.shape:
+                        filtered_ckpt_dict[new_k] = v
+                        if rank == 0:
+                            logger.info(f"Loaded {k} -> {new_k}")
+                        continue
+
+                # 情况3：来自 semseghead.{modality} → 映射到 semseghead
+                if k.startswith(f'semseghead.{modality}.'):
+                    new_k = 'semseghead.' + k[len(f'semseghead.{modality}.'):]
+                    if new_k in model_dict and model_dict[new_k].shape == v.shape:
+                        filtered_ckpt_dict[new_k] = v
+                        if rank == 0:
+                            logger.info(f"Loaded {k} -> {new_k}")
+                        continue
+
+                # 其他不匹配的参数跳过
+                if rank == 0:
+                    logger.warning(f"Skipping parameter: {k} with shape {v.shape} (does not match)")
+
+            # 更新模型字典
             model_dict.update(filtered_ckpt_dict)
-            # 加载该 state dict
-            model.load_state_dict(model_dict, strict=False)   
+            model.load_state_dict(model_dict, strict=False)
 
-    for p in model.encoder.parameters():
-        p.requires_grad = False
 
-    model = apply_peft(model, cfg)
-    logger.info(model)
-    show_trainable_parameters(model, logger)
+    # for p in model.encoder.parameters():
+        # p.requires_grad = False
+
+    # model = apply_peft(model, cfg)
+    # logger.info(model)
+    # show_trainable_parameters(model, logger)
 
     lr = { "vit_h": 0.00005, "vit_l": 0.00005, "vit_b": 0.00005, "dinov3_vit_b":0.00005,  "dinov3_vit_b_mae":0.00005, "vit_l_rvsa":0.00005 }.get(args.backbone, 0.0001)
 

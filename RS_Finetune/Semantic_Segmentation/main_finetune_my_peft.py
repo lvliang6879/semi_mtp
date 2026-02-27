@@ -287,7 +287,7 @@ def main():
                     )
 
             # === 确定当前微调的模态 ===
-            modality = getattr(args, 'modality', 'sar')
+            modality = getattr(args, 'modality', 'opt')
             if rank == 0:
                 logger.info(f"Loading segmentation decoder/head for modality: {modality}")
 
@@ -326,7 +326,7 @@ def main():
             model_dict.update(filtered_ckpt_dict)
             model.load_state_dict(model_dict, strict=False)
 
-
+    # 复制FFN的参数到外接的Adapter
     sync_adapter_from_ffn(model, copy_weights=True, zero_init_out=True, verbose=True)
 
     lr = { "vit_h": 0.00005, "vit_l": 0.00005, "vit_b": 0.00005, "dinov3_vit_b":0.00005,  "dinov3_vit_b_mae":0.00005, "vit_l_rvsa":0.00005 }.get(args.backbone, 0.00005)
