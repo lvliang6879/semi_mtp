@@ -2,8 +2,11 @@ import torch
 import torch.nn as nn
 from model.backbone.vit_win_rvsa_v3_wsz7_mtp import vit_b_rvsa, vit_l_rvsa
 # from model.backbone.intern_image import InternImage
-from model.backbone.vit import ViT_B, ViT_L, ViT_H, ViT_G
+from model.backbone.vit import ViT_B, ViT_L, ViT_H
+from model.backbone.vit_dino import build_dinov3_vit
 from model.backbone.dinov3 import DINOV3_ViT_B
+from model.backbone.dinov3_adapter import DINOV3_ViT_B_Adapter
+from model.backbone.dinov3_mae import DINOV3_ViT_B_MAE
 # from model.backbone.vitaev2 import vitae_v2_s
 from model.semseg.encoder_decoder import MTP_SS_UperNet
 # from model.backbone.our_resnet import res50
@@ -89,15 +92,7 @@ def get_backbone(args):
             raise NotImplementedError
     
     if args.backbone == 'swin_b':
-        encoder = swin(embed_dim=128, 
-            depths=[2, 2, 18, 2],
-            num_heads=[4, 8, 16, 32],
-            window_size=7,
-            ape=False,
-            drop_path_rate=0.3,
-            patch_norm=True,
-            use_checkpoint=False
-                    )
+        encoder = swin_b()
         print('################# Using Swin-T as backbone! ###################')
         if args.init_backbone == 'imp':
             encoder.init_weights('./pretrained/swin_base_patch4_window7_224_22k_20220317-4f79f7c0.pth')
@@ -144,7 +139,7 @@ def get_backbone(args):
             encoder.init_weights('./pretrained/vit-l-mae-checkpoint-1599.pth')
             print('################# Initing ViT-L + RVSA pretrained weights for Pretraining! ###################')
         elif args.init_backbone == 'mae_mtp':
-            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/last_vit_l_rvsa_ss_is_rd_pretrn_model_encoder.pth')
+            encoder.init_weights('/data1/users/lvliang/project_123/semi_sep/pretrained/checkpoints/last_vit_l_rvsa_ss_is_rd_pretrn_model_encoder.pth')
             print('################# Pure ViT-L + RVSA SEP Pretraining! ###################')
         elif args.init_backbone == 'none':
             print('################# Pure ViT-L + RVSA SEP Pretraining! ###################')
@@ -165,58 +160,86 @@ def get_backbone(args):
             raise NotImplementedError
 
 
-    elif args.backbone == 'vit_g':
-        encoder = ViT_G(args)
-        print('################# Using ViT-G as backbone! ###################')
-        if args.init_backbone == 'mae':
-            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/semi_sep/vit_h/vit-h-mae-checkpoint-1599.pth')
-            print('################# Initing ViT-H pretrained weights for Pretraining! ###################')
-        elif args.init_backbone == 'none':
-            print('################# Pure ViT-H SEP Pretraining! ###################')
-        else:
-            raise NotImplementedError
-
-
     elif args.backbone == 'vit_l':
         encoder = ViT_L(args)
         print('################# Using ViT-L as backbone! ###################')
         if args.init_backbone == 'mae':
-            encoder.init_weights('./pretrained/vit-l-mae-checkpoint-1599.pth')
+            encoder.init_weights('/data1/users/lvliang/project_123/semi_sep/pretrained/checkpoints/vit-l-mae-checkpoint-1599.pth')
             print('################# Initing ViT-L pretrained weights for Pretraining! ###################')
-        elif args.init_backbone == 'selectivemae':
-            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/semi_sep/pretrained/semi_sep/vit_l/vit-large-opticalrs13m.pth')
-            print('################# Initing ViT-L selectivemae Pretraining! ###################')
+        elif args.init_backbone == 'satmae_pp':
+            encoder.init_weights('/data1/users/lvliang/project_123/semi_sep/pretrained/checkpoints/ViT-L_satmae_pp_pretrain_fmow_rgb.pth')
+            print('################# Initing ViT-L pretrained weights with satmae_pp for Pretraining! ###################')
+        elif args.init_backbone == 'scale_mae':
+            encoder.init_weights('/data1/users/lvliang/project_123/semi_sep/pretrained/checkpoints/semi_sep/scalemae-vitlarge-800.pth')
+            print('################# Initing ViT-L pretrained weights with scalemae for Pretraining! ###################')
         elif args.init_backbone == 'none':
-            print('################# Pure ViT-L SEP Pretraining! ###################')
+            print('################# Pure ViT-L! ###################')
         else:
             raise NotImplementedError
-
 
     elif args.backbone == 'vit_b':
         encoder = ViT_B(args)
         print('################# Using ViT-B as backbone! ###################')
         if args.init_backbone == 'mae':
-            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/vit-b-checkpoint-1599.pth')
+            encoder.init_weights('/data1/users/lvliang/project_123/semi_sep/pretrained/checkpoints/vit-b-checkpoint-1599.pth')
             print('################# Initing ViT-B  pretrained weights for Pretraining! ###################')
-        elif args.init_backbone == 's5':
-            encoder.init_weights('/data1/users/zhengzhiyu/mtp_workplace/obb_mtp/pretrained/best_vit_b_ins.pth')
-        elif args.init_backbone == 'semi_mtp':
-            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/S5/pretrained/semi_mtp_20k.pth')
         elif args.init_backbone == 'none':
             print('################# Pure ViT-B SEP Pretraining! ###################')
         else:
             raise NotImplementedError
 
     elif args.backbone == 'dinov3_vit_b':
+        # encoder = build_dinov3_vit(
+        #         arch="vitb16",          # 可选: "vits16", "vitb16", "vitl16", etc.
+        #         pretrained=True,        # 自动从 Meta 官方 URL 下载权重
+        #         weights="lvd1689m",     # 默认就是这个，可省略
+        #         weights_path="/data1/users/lvliang/project_123/S5_finetune/pretrained/best_dinov3_vit_b_12k.pth",     # 默认就是这个，可省略
+        #         device="cuda" if torch.cuda.is_available() else "cpu",
+        #         enable_fpn=True)
         encoder = DINOV3_ViT_B(args)
         print('################# Using DINOV3-ViT-B as backbone! ###################')
         if args.init_backbone == 'dinov3':
-            encoder.init_weights('/data1/users/zhengzhiyu/ssl_workplace/UniMatch-V2-main/pretrained/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth')
+            encoder.init_weights('/data1/users/lvliang/project_123/S5_pretraing/pretrained/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth')
         elif args.init_backbone == 'none':
             print('################# Pure DINOV3-ViT-B Pretraining! ###################')
         else:
             raise NotImplementedError
 
+
+    elif args.backbone == 'dinov3_vit_b_adapter':
+        # encoder = build_dinov3_vit(
+        #         arch="vitb16",          # 可选: "vits16", "vitb16", "vitl16", etc.
+        #         pretrained=True,        # 自动从 Meta 官方 URL 下载权重
+        #         weights="lvd1689m",     # 默认就是这个，可省略
+        #         weights_path="/data1/users/lvliang/project_123/S5_finetune/pretrained/best_dinov3_vit_b_12k.pth",     # 默认就是这个，可省略
+        #         device="cuda" if torch.cuda.is_available() else "cpu",
+        #         enable_fpn=True)
+        encoder = DINOV3_ViT_B_Adapter(args)
+        print('################# Using DINOV3-ViT-B as backbone! ###################')
+        if args.init_backbone == 'dinov3':
+            encoder.init_weights('/data1/users/lvliang/project_123/S5_pretraing/pretrained/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth')
+        elif args.init_backbone == 'none':
+            print('################# Pure DINOV3-ViT-B Pretraining! ###################')
+        else:
+            raise NotImplementedError
+
+
+    elif args.backbone == 'dinov3_vit_b_mae':
+        # encoder = build_dinov3_vit(
+        #         arch="vitb16",          # 可选: "vits16", "vitb16", "vitl16", etc.
+        #         pretrained=True,        # 自动从 Meta 官方 URL 下载权重
+        #         weights="lvd1689m",     # 默认就是这个，可省略
+        #         weights_path="/data1/users/lvliang/project_123/S5_finetune/pretrained/best_dinov3_vit_b_12k.pth",     # 默认就是这个，可省略
+        #         device="cuda" if torch.cuda.is_available() else "cpu",
+        #         enable_fpn=True)
+        encoder = DINOV3_ViT_B_MAE(args)
+        print('################# Using DINOV3-ViT-B-MAE as backbone! ###################')
+        if args.init_backbone == 'dinov3':
+            encoder.init_weights('/data1/users/lvliang/project_123/S5_pretraing/pretrained/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth')
+        elif args.init_backbone == 'none':
+            print('################# Pure DINOV3-ViT-B-MAE Pretraining! ###################')
+        else:
+            raise NotImplementedError
 
     elif args.backbone == 'internimage_xl':
         encoder = InternImage(core_op='DCNv3',
@@ -303,26 +326,22 @@ class UperNet(torch.nn.Module):
         super(UperNet, self).__init__()
 
         self.args = args
-        # self.backbone = get_backbone(args)
         self.encoder = get_backbone(args)
         # Init task head
         print('################# Using UperNet for semseg! ######################')
-        # self.semsegdecoder = get_semsegdecoder(in_channels=getattr(self.backbone, 'out_channels', None))
         self.semsegdecoder = get_semsegdecoder(in_channels=getattr(self.encoder, 'out_channels', None))
-
-        # self.terr_semseghead = nn.Sequential(
-        #         nn.Dropout2d(0.1),
-        #         nn.Conv2d(256, cfg['terr_nclass'], kernel_size=1))
+        # self.semsegdecoder = get_semsegdecoder(in_channels=[768, 768, 768, 768])
 
         self.semseghead = nn.Sequential(
                 nn.Dropout2d(0.1),
                 nn.Conv2d(256, cfg['nclass'], kernel_size=1))
 
 
-    def forward(self, x):
+    def forward(self, x, mask_ratio=0.0):
         h, w = x.shape[-2:]
-        # e = self.backbone(x)
-        e = self.encoder(x)
+        # print("mask ratio", masks)
+        # e = self.encoder.forward(x, mask_ratio=mask_ratio)
+        e = self.encoder.forward(x)
         ss = self.semsegdecoder.decode_head._forward_feature(e)
         out = self.semseghead(ss)
         out = F.interpolate(out, size=(h, w), mode="bilinear", align_corners=True)
